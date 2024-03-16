@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "start": "nodemon ./build/playground.js",
+    "start_remo": "nodemon ./build/remo.js",
+    "build:dev": "tsc -p . -w"
+  },
+  "dependencies": {
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

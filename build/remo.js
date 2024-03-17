@@ -23,24 +23,53 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// Import the file system module to work with files on the computer.
 const fs = __importStar(require("fs"));
-function createCSV(data, filepath) {
-    // Convert array of objects to CSV string
-    const csvContent = data.map(row => Object.values(row).join(',')).join('\n');
-    // Write to a file
+function createCSV(grades) {
+    // Create a constant variable with the name of the file.
+    const filepath = 'course_grades.csv';
+    // Order the student's grades by the most quizzes taken throughout the course.
+    grades.sort((a, b) => {
+        const total_grades_a = a.first_quarter.length + a.second_quarter.length + a.third_quarter.length + a.fourth_quarter.length;
+        const total_grades_b = b.first_quarter.length + b.second_quarter.length + b.third_quarter.length + b.fourth_quarter.length;
+        return total_grades_b - total_grades_a;
+    });
+    // Convert the list of grades to CSV string
+    const csvContent = grades.map(row => Object.values(row).join(',')).join('\n');
+    console.log('The data has been parsed succesfully.');
+    // Write the CSV file
     fs.writeFile(filepath, csvContent, (err) => {
         if (err) {
             console.error('There was an error writing the CSV file:', err);
         }
         else {
-            console.log('CSV file has been saved.');
+            console.log("CSV file has been saved locally with the name 'course_grades.csv'.");
         }
     });
 }
-// Example usage
-const data = [
-    { id: 1, name: 'Alice', score: 88 },
-    { id: 2, name: 'Bob', score: 92 },
-    { id: 3, name: 'Charlie', score: 90 },
+// Declare a dummy data to be replaced later with the actual grades from the database.
+const grades = [
+    {
+        name: 'Charlie',
+        first_quarter: [4.5, 4.8, 3],
+        second_quarter: [4, 3.9, 2.5],
+        third_quarter: [2.8, 3, 4],
+        fourth_quarter: [4.3, 3.7, 2.5]
+    },
+    {
+        name: 'Bob',
+        first_quarter: [2.5, 3.5, 5],
+        second_quarter: [3.7, 4.5, 2.5],
+        third_quarter: [2.2, 3.5, 4.7],
+        fourth_quarter: [3.8, 4.4, 5, 4.9]
+    },
+    {
+        name: 'Alice',
+        first_quarter: [2.5, 3.5, 5, 3],
+        second_quarter: [3.3, 3.5, 4.5],
+        third_quarter: [4, 3.9, 4.4, 3.8],
+        fourth_quarter: [3, 4.5, 5]
+    },
 ];
-createCSV(data, 'example.csv');
+// Example use of the function 
+createCSV(grades);

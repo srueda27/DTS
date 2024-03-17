@@ -34,6 +34,18 @@ function createCSV(grades) {
         const total_grades_b = b.first_quarter.length + b.second_quarter.length + b.third_quarter.length + b.fourth_quarter.length;
         return total_grades_b - total_grades_a;
     });
+    // Calculate the final grade per quarter, for each student. And add the final grade at the end of the quarter.
+    // Round the final grade to only 1 decimal.
+    grades.forEach(student => {
+        const final_first_quarter = (student.first_quarter.reduce((a, b) => a + b, 0)) / student.first_quarter.length;
+        student.first_quarter.push(Math.round(final_first_quarter * 10) / 10);
+        const final_second_quarter = (student.second_quarter.reduce((a, b) => a + b, 0)) / student.second_quarter.length;
+        student.second_quarter.push(Math.round(final_second_quarter * 10) / 10);
+        const final_third_quarter = (student.third_quarter.reduce((a, b) => a + b, 0)) / student.third_quarter.length;
+        student.third_quarter.push(Math.round(final_third_quarter * 10) / 10);
+        const final_fourth_quarter = (student.fourth_quarter.reduce((a, b) => a + b, 0)) / student.fourth_quarter.length;
+        student.fourth_quarter.push(Math.round(final_fourth_quarter * 10) / 10);
+    });
     // Convert the list of grades to CSV string
     const csvContent = grades.map(row => Object.values(row).join(',')).join('\n');
     console.log('The data has been parsed succesfully.');

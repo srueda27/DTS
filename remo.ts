@@ -14,6 +14,8 @@ function createCSV(grades: student_info[]) {
     return total_grades_b - total_grades_a
   })
 
+  let headers = ['Name']
+
   // Declare maximum variables to store the maximum quizzes taken each quarter
   let max_first_quarter = 0
   let max_second_quarter = 0
@@ -26,6 +28,23 @@ function createCSV(grades: student_info[]) {
     max_third_quarter = Math.max(max_third_quarter, student.third_quarter.length)
     max_fourth_quarter = Math.max(max_fourth_quarter, student.fourth_quarter.length)
   })
+
+  // Create a constant function to create the headers per quarter based on the number of quizzes
+  const createHeader = (quarter: string, qty_quiz: number): string[] => {
+    let headers: string[] = []
+
+    for (let i = 0; i < qty_quiz; i++) {
+      headers.push(`${quarter}_quiz${i}`)
+    }
+    headers.push(`${quarter}_final`)
+
+    return headers
+  }
+
+  headers.push(...createHeader('Q1', max_first_quarter))
+  headers.push(...createHeader('Q2', max_second_quarter))
+  headers.push(...createHeader('Q3', max_third_quarter))
+  headers.push(...createHeader('Q4', max_fourth_quarter))
 
   
 

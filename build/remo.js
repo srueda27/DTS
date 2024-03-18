@@ -46,24 +46,55 @@ function createCSV(grades) {
         max_third_quarter = Math.max(max_third_quarter, student.third_quarter.length);
         max_fourth_quarter = Math.max(max_fourth_quarter, student.fourth_quarter.length);
     });
-    // Create a constant function to create the headers per quarter based on the number of quizzes
+    // Define an arrow function to create the headers per quarter based on the number of quizzes
     const createHeader = (quarter, qty_quiz) => {
         let headers = [];
-        for (let i = 0; i < qty_quiz; i++) {
+        for (let i = 1; i <= qty_quiz; i++) {
             headers.push(`${quarter}_quiz${i}`);
         }
         headers.push(`${quarter}_final`);
         return headers;
     };
+    // Create the headers per quarter
     headers.push(...createHeader('Q1', max_first_quarter));
     headers.push(...createHeader('Q2', max_second_quarter));
     headers.push(...createHeader('Q3', max_third_quarter));
     headers.push(...createHeader('Q4', max_fourth_quarter));
-    // Convert the list of grades to CSV string
-    const csvContent = grades.map(row => Object.values(row).join(',')).join('\n');
+    /*
+      Calculate the final grade per quarter, for each student (without the missing grades).
+      Round the final grade to only 1 decimal.
+      Add 0 for every missing grade.
+      Finally, add the final grade at the end of the quarter.
+    */
+    grades.forEach(student => {
+        let quarter_length = student.first_quarter.length;
+        const final_first_quarter = Math.round((student.first_quarter.reduce((a, b) => a + b, 0)) / quarter_length * 10) / 10;
+        let missing_grades = max_first_quarter - quarter_length;
+        const new_grades = [...student.first_quarter, ...new Array(missing_grades).fill(0), final_first_quarter];
+        student.first_quarter = new_grades;
+        quarter_length = student.second_quarter.length;
+        const final_second_quarter = Math.round((student.second_quarter.reduce((a, b) => a + b, 0)) / quarter_length * 10) / 10;
+        missing_grades = max_second_quarter - quarter_length;
+        const new_grades_second = [...student.second_quarter, ...new Array(missing_grades).fill(0), final_second_quarter];
+        student.second_quarter = new_grades_second;
+        quarter_length = student.third_quarter.length;
+        const final_third_quarter = Math.round((student.third_quarter.reduce((a, b) => a + b, 0)) / quarter_length * 10) / 10;
+        missing_grades = max_third_quarter - quarter_length;
+        const new_grades_third = [...student.third_quarter, ...new Array(missing_grades).fill(0), final_third_quarter];
+        student.third_quarter = new_grades_third;
+        quarter_length = student.fourth_quarter.length;
+        const final_fourth_quarter = Math.round((student.fourth_quarter.reduce((a, b) => a + b, 0)) / quarter_length * 10) / 10;
+        missing_grades = max_fourth_quarter - quarter_length;
+        const new_grades_fourth = [...student.fourth_quarter, ...new Array(missing_grades).fill(0), final_fourth_quarter];
+        student.fourth_quarter = new_grades_fourth;
+    });
+    // Convert the headers to CSV string.
+    const headersString = headers.join(',') + '\n';
+    // Convert the list of grades to CSV string. Replace all 0s with N/A
+    const csvContent = grades.map(row => Object.values(row).join(',')).join('\n').replace(/,0,/g, ',N/A,');
     console.log('The data has been parsed succesfully.');
-    // Write the CSV file
-    fs.writeFile(filepath, csvContent, (err) => {
+    // Write the CSV file, including headers.
+    fs.writeFile(filepath, headersString + csvContent, (err) => {
         if (err) {
             console.error('There was an error writing the CSV file:', err);
         }

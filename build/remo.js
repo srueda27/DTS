@@ -60,11 +60,13 @@ function createCSV(grades) {
     headers.push(...createHeader('Q2', max_second_quarter));
     headers.push(...createHeader('Q3', max_third_quarter));
     headers.push(...createHeader('Q4', max_fourth_quarter));
+    headers.push('Final');
     /*
       Calculate the final grade per quarter, for each student (without the missing grades).
       Round the final grade to only 1 decimal.
       Add 0 for every missing grade.
-      Finally, add the final grade at the end of the quarter.
+      Then, add the final grade at the end of the quarter.
+      Calculate the final grade of the course and assign it to the final property of the student.
     */
     grades.forEach(student => {
         let quarter_length = student.first_quarter.length;
@@ -87,6 +89,7 @@ function createCSV(grades) {
         missing_grades = max_fourth_quarter - quarter_length;
         const new_grades_fourth = [...student.fourth_quarter, ...new Array(missing_grades).fill(0), final_fourth_quarter];
         student.fourth_quarter = new_grades_fourth;
+        student.final = Math.round(((final_first_quarter + final_second_quarter + final_third_quarter + final_fourth_quarter) / 4) * 10) / 10;
     });
     // Convert the headers to CSV string.
     const headersString = headers.join(',') + '\n';

@@ -28,12 +28,6 @@ const fs = __importStar(require("fs"));
 function createCSV(grades) {
     // Create a constant variable with the name of the file.
     const filepath = 'course_grades.csv';
-    // Order the student's grades by the most quizzes taken throughout the course.
-    grades.sort((a, b) => {
-        const total_grades_a = a.first_quarter.length + a.second_quarter.length + a.third_quarter.length + a.fourth_quarter.length;
-        const total_grades_b = b.first_quarter.length + b.second_quarter.length + b.third_quarter.length + b.fourth_quarter.length;
-        return total_grades_b - total_grades_a;
-    });
     let headers = ['Name'];
     // Declare maximum variables to store the maximum quizzes taken each quarter
     let max_first_quarter = 0;
@@ -91,6 +85,21 @@ function createCSV(grades) {
         student.fourth_quarter = new_grades_fourth;
         student.final = Math.round(((final_first_quarter + final_second_quarter + final_third_quarter + final_fourth_quarter) / 4) * 10) / 10;
     });
+    // Order the student's grades by final grade in descending order, and then by least quizzes taken.
+    grades.sort((a, b) => {
+        if (a.final != b.final) {
+            return b.final - a.final;
+        }
+        const total_grades_a = a.first_quarter.filter(num => num != 0).length +
+            a.second_quarter.filter(num => num != 0).length +
+            a.third_quarter.filter(num => num != 0).length +
+            a.fourth_quarter.filter(num => num != 0).length;
+        const total_grades_b = b.first_quarter.filter(num => num != 0).length +
+            b.second_quarter.filter(num => num != 0).length +
+            b.third_quarter.filter(num => num != 0).length +
+            b.fourth_quarter.filter(num => num != 0).length;
+        return total_grades_a - total_grades_b;
+    });
     // Convert the headers to CSV string.
     const headersString = headers.join(',') + '\n';
     // Convert the list of grades to CSV string. Replace all 0s with N/A
@@ -124,7 +133,7 @@ const grades = [
     },
     {
         name: 'Alice',
-        first_quarter: [2.5, 3.5, 5, 3],
+        first_quarter: [2.5, 3.5, 1, 3],
         second_quarter: [3.3, 3.5, 4.5],
         third_quarter: [4, 3.9, 4.4, 3.8],
         fourth_quarter: [3, 4.5, 5]

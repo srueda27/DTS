@@ -4,7 +4,8 @@ interface student_data {
   address: string,
   blood_type: string,
   ID: string,
-  phone_number: string
+  phone_number: string,
+  missing_data?: boolean
 }
 
 function cleanStudentData(student_data: student_data) {
@@ -26,10 +27,10 @@ function cleanStudentData(student_data: student_data) {
   }
 
   // Give the blood type the format of letters together and a space for the sign, e.g. 'AB -'.
-  if (student.blood_type) {
+  if (student_data.blood_type) {
 	const blood_pattern = /^([A-Z]+)\s*(\+|-)$/;
-	const match = student.blood_type.match(blood_pattern)
-	student.blood_type = `${match[1]} ${match[2]}`
+	const match = student_data.blood_type.match(blood_pattern)
+	student_data.blood_type = `${match[1]} ${match[2]}`
   }
 
   // Give the ID the format of having a '.' character every 3 digits from the end.
@@ -38,8 +39,21 @@ function cleanStudentData(student_data: student_data) {
 	student_data.ID = clean_ID.split('').reverse().join('').replace(/(\d{3})/g, '$1.').split('').reverse().join('')
   }
 
+  student_data.missing_data = false
+
+  // Flag the student data with missing information if any field is empty
+  if (
+	!student_data.last_name ||
+	!student_data.first_name ||
+	!student_data.address ||
+	!student_data.blood_type ||
+	!student_data.phone_number ||
+	!student_data.ID
+  ) student_data.missing_data = true
+
   return student_data
 }
+
 
 const student: student_data = {
   first_name: 'Sebastian ',

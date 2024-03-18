@@ -22,6 +22,6 @@ const student = {
     address: 'Calle 2 # 1 -  10 ',
     blood_type: ' AB-',
     ID: '1165365955',
-    phone_number: '3658859512'
+    phone_number: '3658859512',
 };
 console.log(cleanStudentData(student));

@@ -31,13 +31,14 @@ function cleanStudentData(student_data: student_data) {
   return student_data
 }
 
+
 const student: student_data = {
   first_name: 'Sebastian ',
   last_name: 'Perez Silva',
   address: 'Calle 2 # 1 -  10 ',
   blood_type: ' AB-',
   ID: '1165365955',
-  phone_number: '3658859512'
+  phone_number: '3658859512',
 }
 
 console.log(cleanStudentData(student))

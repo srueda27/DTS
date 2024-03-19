@@ -1,16 +1,17 @@
 function cleanStudentData(student_data) {
-    let missing_data = '';
     // Clean every field from leading or trailing spaces.
     student_data.first_name = student_data.first_name.trim();
-    if (!student_data.first_name)
-        missing_data += 'First name field is empty. ';
     student_data.last_name = student_data.last_name.trim();
-    if (!student_data.last_name)
-        missing_data += 'Last name field is empty. ';
     student_data.address = student_data.address.trim();
     student_data.blood_type = student_data.blood_type.trim();
     student_data.phone_number = student_data.phone_number.trim();
     student_data.ID = student_data.ID.trim();
+    // If a field is missing append the message
+    let missing_data = '';
+    if (!student_data.first_name)
+        missing_data += 'First name field is empty. ';
+    if (!student_data.last_name)
+        missing_data += 'Last name field is empty. ';
     // Replace more than 1 space with just one space.
     if (student_data.address) {
         student_data.address = student_data.address.replace(/\s{2,}/g, ' ');

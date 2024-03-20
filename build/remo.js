@@ -71,7 +71,7 @@ function tournament_report(matches) {
         if (wins != max_wins)
             winners_map.delete(name);
     });
-    // Calculate the average points por set (down to 1 decimal) of the competitor with the highest wins
+    // Calculate the average points por set (down to 1 decimal) of the competitor with the highest wins, and assign the wins and average property.
     for (const [winner, wins] of winners_map) {
         const sets = set_points_map.get(winner).length;
         const set_average = Math.round(((set_points_map.get(winner).reduce((prev, curr) => prev + curr, 0)) / sets) * 10) / 10;
@@ -79,7 +79,7 @@ function tournament_report(matches) {
         competitor.average_set = set_average;
         competitor.wins = wins;
     }
-    // From the list of arrows, risers, and limbs, calculate the top3 most used.
+    // From the list of arrows, risers, and limbs, count the number of times a brand was used.
     let risers_map = new Map();
     for (const riser of risers) {
         const risers_count = risers_map.get(riser) || 0;
@@ -95,6 +95,7 @@ function tournament_report(matches) {
         const arrows_count = arrows_map.get(arrow) || 0;
         arrows_map.set(arrow, arrows_count + 1);
     }
+    // Create the report object with the competitors with a wins property defined and the top 3 brands for limbs, risers, and arrows.
     const report = {
         winners: winners.filter(competitor => competitor.wins != undefined),
         top3_risers: Array.from(risers_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),

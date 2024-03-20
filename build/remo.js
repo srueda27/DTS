@@ -13,46 +13,41 @@ function tournament_report(matches) {
     let winners = [];
     let competitors = [];
     let set_points_map = new Map();
-    // From each match get the winner of the match, and save the risers, limbs and arrows used for the competitors not registered.
+    // Define a function expression to count the total points per set, and update the value for the competitor
+    const calculateTotalSetPoints = function (set, set_points_map, arrows_values) {
+        for (const competitor in set) {
+            const set_points = set_points_map.get(competitor) || [];
+            const total_set_points = set[competitor].reduce((total, arrow) => {
+                if (arrow === 'M' || arrow === 'X') {
+                    return total + arrows_values[arrow];
+                }
+                return total + parseInt(arrow);
+            }, 0);
+            set_points.push(total_set_points);
+            set_points_map.set(competitor, set_points);
+        }
+    };
+    // Define a function expression to add the competitor's used brands to their counting arrays if the competitor's data is not already recorded.
+    const recordCompetitorsData = function (index, match_competitors) {
+        const competitor = match_competitors[index];
+        if (!competitors.some(comp => comp.name === competitor.name)) {
+            competitors.push(competitor);
+            risers.push(competitor.riser_brand);
+            limbs.push(competitor.limb_brand);
+            arrows.push(competitor.arrows_brand);
+        }
+    };
+    // From each match get the winner of the match calculate the total points per set per
+    //  and save the risers, limbs and arrows used for the competitors.
     for (let i = 0; i < matches.length; i++) {
         const match_competitors = matches[i].competitors;
         const sets = matches[i].sets;
         const winner = matches[i].winner;
-        if (!competitors.filter(competitor => competitor.name == match_competitors[0].name).length) {
-            competitors.push(match_competitors[0]);
-            risers.push(match_competitors[0].riser_brand);
-            limbs.push(match_competitors[0].limb_brand);
-            arrows.push(match_competitors[0].arrows_brand);
-        }
-        if (!competitors.filter(competitor => competitor.name == match_competitors[1].name).length) {
-            competitors.push(match_competitors[1]);
-            risers.push(match_competitors[1].riser_brand);
-            limbs.push(match_competitors[1].limb_brand);
-            arrows.push(match_competitors[1].arrows_brand);
-        }
+        recordCompetitorsData(0, match_competitors);
+        recordCompetitorsData(1, match_competitors);
         winners.push(match_competitors.find(competitor => competitor.name == winner));
-        let competitor_1 = '';
-        let competitor_2 = '';
-        // Calculate the total points per set per competitor. 
         for (const set of sets) {
-            competitor_1 = Object.keys(set)[0];
-            const set_points_1 = set_points_map.get(competitor_1) || [];
-            competitor_2 = Object.keys(set)[1];
-            const set_points_2 = set_points_map.get(competitor_2) || [];
-            const total_set_1 = set[competitor_1].reduce((a, b) => {
-                if (b == 'M' || b == 'X')
-                    return a + arrows_values[b];
-                return parseInt(b) + a;
-            }, 0);
-            set_points_1.push(total_set_1);
-            const total_set_2 = set[competitor_2].reduce((a, b) => {
-                if (b == 'M' || b == 'X')
-                    return a + arrows_values[b];
-                return parseInt(b) + a;
-            }, 0);
-            set_points_2.push(total_set_2);
-            set_points_map.set(competitor_1, set_points_1);
-            set_points_map.set(competitor_2, set_points_2);
+            calculateTotalSetPoints(set, set_points_map, arrows_values);
         }
     }
     // Calculate from the competitors who won a match, what is the highest number of wins, 
@@ -79,28 +74,28 @@ function tournament_report(matches) {
         competitor.average_set = set_average;
         competitor.wins = wins;
     }
-    // From the list of arrows, risers, and limbs, count the number of times a brand was used.
-    let risers_map = new Map();
-    for (const riser of risers) {
-        const risers_count = risers_map.get(riser) || 0;
-        risers_map.set(riser, risers_count + 1);
-    }
-    let limbs_map = new Map();
-    for (const limb of limbs) {
-        const limbs_count = limbs_map.get(limb) || 0;
-        limbs_map.set(limb, limbs_count + 1);
-    }
-    let arrows_map = new Map();
-    for (const arrow of arrows) {
-        const arrows_count = arrows_map.get(arrow) || 0;
-        arrows_map.set(arrow, arrows_count + 1);
-    }
+    // Create a function expression to count the occurrences of brands in an array.
+    const countOccurrences = function (items) {
+        const itemMap = new Map();
+        for (const item of items) {
+            const count = itemMap.get(item) || 0;
+            itemMap.set(item, count + 1);
+        }
+        return itemMap;
+    };
+    const risers_map = countOccurrences(risers);
+    const limbs_map = countOccurrences(limbs);
+    const arrows_map = countOccurrences(arrows);
+    // Define an arrow function to get the top 3 brands and their counts, from a map.
+    const getTop3 = (map) => Array.from(map, ([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
     // Create the report object with the competitors with a wins property defined and the top 3 brands for limbs, risers, and arrows.
     const report = {
         winners: winners.filter(competitor => competitor.wins != undefined),
-        top3_risers: Array.from(risers_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
-        top3_limbs: Array.from(limbs_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
-        top3_arrows: Array.from(arrows_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
+        top3_risers: getTop3(risers_map),
+        top3_limbs: getTop3(limbs_map),
+        top3_arrows: getTop3(arrows_map),
     };
     return report;
 }
@@ -247,4 +242,5 @@ const matches = [
         winner: 'Santiago'
     }
 ];
-console.log(tournament_report(matches));
+const report = tournament_report(matches);
+console.log(report);

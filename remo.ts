@@ -1,78 +1,293 @@
-interface student_data {
-  first_name: string,
-  last_name: string,
-  address: string,
-  blood_type: string,
-  ID: string,
-  phone_number: string,
-  data_errors?: string
+interface competitor {
+  name: string,
+  age: number,
+  category: string,
+  riser_brand: string,
+  limb_brand: string,
+  arrows_brand: string,
+  average_set?: number,
+  wins?: number
 }
 
-function cleanStudentData(student_data: student_data) {
-  // Clean every field from leading or trailing spaces.
-  student_data.first_name = student_data.first_name.trim()
-  student_data.last_name = student_data.last_name.trim()
-  student_data.address = student_data.address.trim()
-  student_data.blood_type = student_data.blood_type.trim()
-  student_data.phone_number = student_data.phone_number.trim()
-  student_data.ID = student_data.ID.trim()
+interface set {
+  [key: string]: string[]
+}
 
-  // If a field is missing append the message
-  let data_errors = ''
-  if (!student_data.first_name) data_errors += 'First name field is empty. '
-  if (!student_data.last_name) data_errors += 'Last name field is empty. '
+interface match {
+  competitors: competitor[],
+  sets: set[],
+  winner: string
+}
 
-  // Replace more than 1 space with just one space.
-  if (student_data.address) {
-    student_data.address = student_data.address.replace(/\s{2,}/g, ' ')
-  } else {
-    data_errors += 'Address field is empty. '
+interface report {
+  winners: competitor[],
+  top3_risers: { name: string, count: number }[],
+  top3_limbs: { name: string, count: number }[],
+  top3_arrows: { name: string, count: number }[],
+}
+
+export default function tournament_report(matches: match[]) {
+  const arrows_values = {
+    'M': 0,
+    'X': 10
   }
 
-  // Give the phone number the format of '3 digits - 3 digits - remaining digits'.
-  if (student_data.phone_number) {
-    const clean_phone_number = student_data.phone_number.replace(/\D/g, '')
-    student_data.phone_number = `${clean_phone_number.substring(0, 3)}-${clean_phone_number.substring(3, 6)}-${clean_phone_number.substring(6)}`
-  } else {
-    data_errors += 'Phone number field is empty. '
-  }
+  // Declare variables to store the list of winners and risers, limbs and arrows used in the tournament. 
+  // Declare a variable competitors to keep a record of competitors already registered.
+  let risers: string[] = []
+  let limbs: string[] = []
+  let arrows: string[] = []
+  let winners: competitor[] = []
+  let competitors: competitor[] = []
 
-  // Give the blood type the format of letters together and a space for the sign, e.g. 'AB -'.
-  // Only allow A, B, AB, or O for the blood type and + or - for the Rh, anything else saves the error.
-  if (student_data.blood_type) {
-    const blood_pattern = /^(A|B|AB|O)[\s]*([\+-])?$/;
-    const match = student_data.blood_type.match(blood_pattern)
+  let set_points_map = new Map<string, number[]>()
 
-    if (match) {
-      student_data.blood_type = `${match[1]} ${match[2]}`
-    } else {
-      data_errors += 'Blood type must be 1 of the 4 blood types (A, B, AB, or O) with only + or - as Rh'
+  // From each match get the winner of the match, and save the risers, limbs and arrows used for the competitors not registered.
+  for (let i = 0; i < matches.length; i++) {
+    const match_competitors = matches[i].competitors
+    const sets = matches[i].sets
+    const winner = matches[i].winner
+
+    if (!competitors.filter(competitor => competitor.name == match_competitors[0].name).length) {
+      competitors.push(match_competitors[0])
+      risers.push(match_competitors[0].riser_brand)
+      limbs.push(match_competitors[0].limb_brand)
+      arrows.push(match_competitors[0].arrows_brand)
     }
 
-  } else {
-    data_errors += 'Blood type field is empty. '
+    if (!competitors.filter(competitor => competitor.name == match_competitors[1].name).length) {
+      competitors.push(match_competitors[1])
+      risers.push(match_competitors[1].riser_brand)
+      limbs.push(match_competitors[1].limb_brand)
+      arrows.push(match_competitors[1].arrows_brand)
+    }
+
+    winners.push(match_competitors.find(competitor => competitor.name == winner))
+
+    let competitor_1: string = ''
+    let competitor_2: string = ''
+
+    // Calculate the total points per set per competitor. 
+    for (const set of sets) {
+      competitor_1 = Object.keys(set)[0]
+      const set_points_1 = set_points_map.get(competitor_1) || []
+      competitor_2 = Object.keys(set)[1]
+      const set_points_2 = set_points_map.get(competitor_2) || []
+
+      const total_set_1 = set[competitor_1].reduce((a, b) => {
+        if (b == 'M' || b == 'X') return a + arrows_values[b]
+        return parseInt(b) + a
+      }, 0)
+      set_points_1.push(total_set_1)
+
+      const total_set_2 = set[competitor_2].reduce((a, b) => {
+        if (b == 'M' || b == 'X') return a + arrows_values[b]
+        return parseInt(b) + a
+      }, 0)
+      set_points_2.push(total_set_2)
+
+      set_points_map.set(competitor_1, set_points_1)
+      set_points_map.set(competitor_2, set_points_2)
+    }
   }
 
-  // Give the ID the format of having a '.' character every 3 digits from the end.
-  if (student_data.ID) {
-    const clean_ID = student_data.ID.replace(/\D/g, '')
-    student_data.ID = clean_ID.split('').reverse().join('').replace(/(\d{3})/g, '$1.').split('').reverse().join('')
-  } else {
-    data_errors += 'ID field is empty.'
+  // Calculate from the competitors who won a match, what is the highest number of wins, 
+  //  and keep the competitor (or competitors) who won the most
+  let winners_map = new Map<string, number>()
+  for (const winner of winners) {
+    const wins = winners_map.get(winner.name) || 0
+    winners_map.set(winner.name, wins + 1)
   }
 
-  if (data_errors) student_data.data_errors = data_errors.trim()
+  let max_wins = 0;
+  winners_map.forEach(wins => {
+    if (wins > max_wins) max_wins = wins
+  })
 
-  return student_data
+  winners_map.forEach((wins, name) => {
+    if (wins != max_wins) winners_map.delete(name)
+  })
+
+  // Calculate the average points por set (down to 1 decimal) of the competitor with the highest wins
+  for (const [winner, wins] of winners_map) {
+    const sets = set_points_map.get(winner).length
+    const set_average = Math.round(((set_points_map.get(winner).reduce((prev, curr) => prev + curr, 0)) / sets) * 10) / 10
+
+    const competitor = winners.filter(competitor => competitor.name == winner)[0]
+    competitor.average_set = set_average
+    competitor.wins = wins
+  }
+
+  // From the list of arrows, risers, and limbs, calculate the top3 most used.
+  let risers_map = new Map<string, number>()
+  for (const riser of risers) {
+    const risers_count = risers_map.get(riser) || 0
+    risers_map.set(riser, risers_count + 1)
+  }
+
+  let limbs_map = new Map<string, number>()
+  for (const limb of limbs) {
+    const limbs_count = limbs_map.get(limb) || 0
+    limbs_map.set(limb, limbs_count + 1)
+  }
+
+  let arrows_map = new Map<string, number>()
+  for (const arrow of arrows) {
+    const arrows_count = arrows_map.get(arrow) || 0
+    arrows_map.set(arrow, arrows_count + 1)
+  }
+
+  const report: report = {
+    winners: winners.filter(competitor => competitor.wins != undefined),
+    top3_risers: Array.from(risers_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
+    top3_limbs: Array.from(limbs_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
+    top3_arrows: Array.from(arrows_map, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3),
+  }
+
+  return report
 }
 
-const student: student_data = {
-  first_name: 'Sebastian ',
-  last_name: 'Perez Silva',
-  address: 'Calle 2 # 1 -  10 ',
-  blood_type: ' ARB-',
-  ID: '1165365955',
-  phone_number: '  ',
-}
+const matches: match[] = [
+  {
+    competitors: [
+      {
+        name: 'Sebastian',
+        age: 21,
+        arrows_brand: 'Easton ACC',
+        category: 'Mayor',
+        limb_brand: 'WNS',
+        riser_brand: 'Hoyt'
+      },
+      {
+        name: 'Julian',
+        age: 21,
+        arrows_brand: 'Easton X10',
+        category: 'Mayor',
+        limb_brand: 'MK',
+        riser_brand: 'Sebastian Flute'
+      }
+    ],
+    sets: [
+      {
+        'Sebastian': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Sebastian': ['9', '9', '10'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Sebastian': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+    ],
+    winner: 'Sebastian'
+  },
+  {
+    competitors: [
+      {
+        name: 'Milton',
+        age: 21,
+        arrows_brand: 'Black Eagle',
+        category: 'Mayor',
+        limb_brand: 'Hoyt',
+        riser_brand: 'W&W'
+      },
+      {
+        name: 'Julian',
+        age: 21,
+        arrows_brand: 'Easton X10',
+        category: 'Mayor',
+        limb_brand: 'MK',
+        riser_brand: 'Sebastian Flute'
+      }
+    ],
+    sets: [
+      {
+        'Milton': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Milton': ['9', '9', '10'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Milton': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+    ],
+    winner: 'Milton'
+  },
+  {
+    competitors: [
+      {
+        name: 'Santiago',
+        age: 21,
+        arrows_brand: 'Black Eagle',
+        category: 'Mayor',
+        limb_brand: 'WNS',
+        riser_brand: 'Hoyt'
+      },
+      {
+        name: 'Julian',
+        age: 21,
+        arrows_brand: 'Easton X10',
+        category: 'Mayor',
+        limb_brand: 'MK',
+        riser_brand: 'Sebastian Flute'
+      }
+    ],
+    sets: [
+      {
+        'Santiago': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Santiago': ['9', '9', '10'],
+        'Julian': ['9', '9', '9']
+      },
+      {
+        'Santiago': ['9', '10', '9'],
+        'Julian': ['9', '9', '9']
+      },
+    ],
+    winner: 'Santiago'
+  },
+  {
+    competitors: [
+      {
+        name: 'Sebastian',
+        age: 21,
+        arrows_brand: 'Easton ACC',
+        category: 'Mayor',
+        limb_brand: 'WNS',
+        riser_brand: 'Hoyt'
+      },
+      {
+        name: 'Santiago',
+        age: 21,
+        arrows_brand: 'Black Eagle',
+        category: 'Mayor',
+        limb_brand: 'WNS',
+        riser_brand: 'Hoyt'
+      }
+    ],
+    sets: [
+      {
+        'Sebastian': ['9', '8', '9'],
+        'Santiago': ['9', '9', '10']
+      },
+      {
+        'Sebastian': ['9', '9', '9'],
+        'Santiago': ['9', 'X', '9']
+      },
+      {
+        'Sebastian': ['9', '10', '9'],
+        'Santiago': ['X', 'X', '9']
+      },
+    ],
+    winner: 'Santiago'
+  }
+]
 
-console.log(cleanStudentData(student))
+console.log(tournament_report(matches))

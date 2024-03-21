@@ -75,6 +75,9 @@ export default function tournament_report(matches: match[]) {
     const sets = matches[i].sets
     const winner = matches[i].winner
 
+    // If the match doesn't have both competitors don't consider the match
+    if (match_competitors.length != 2) continue
+
     recordCompetitorsData(0, match_competitors);
     recordCompetitorsData(1, match_competitors);
 

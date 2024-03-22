@@ -1,294 +1,126 @@
-interface competitor {
+interface Client {
+  initial_investment: number,
+  investmentYears: number
+}
+
+type InterestCategory = 'Compound' | 'Simple';
+
+interface Product {
   name: string,
-  age: number,
-  category: string,
-  riser_brand: string,
-  limb_brand: string,
-  arrows_brand: string,
-  average_set?: number,
-  wins?: number
+  category: InterestCategory,
+  mininum_invesment: number,
+  mininum_years: number,
+  annualInterest: number,                // Annual interest porcentage
+  compoundingFrequency?: number,
 }
 
-interface set {
-  [key: string]: string[]
+interface TotalInvestment {
+  product_name: string,
+  product_category: InterestCategory,
+  mininum_invesment: number,
+  mininum_years: number,
+  initial_investment: number,
+  final_investment: number,
+  total_years: number
 }
 
-interface match {
-  competitors: competitor[],
-  sets: set[],
-  winner: string
-}
-
-interface report {
-  winners: competitor[],
-  top3_risers: { name: string, count: number }[],
-  top3_limbs: { name: string, count: number }[],
-  top3_arrows: { name: string, count: number }[],
-}
-
-export default function tournament_report(matches: match[]) {
-  const arrows_values = {
-    'M': 0,
-    'X': 10
-  }
-
-  // Declare variables to store the list of winners and risers, limbs and arrows used in the tournament. 
-  // Declare a variable competitors to keep a record of competitors already registered.
-  let risers: string[] = []
-  let limbs: string[] = []
-  let arrows: string[] = []
-  let winners: competitor[] = []
-  let competitors: competitor[] = []
-
-  let set_points_map = new Map<string, number[]>()
-
-  // Define a function expression to count the total points per set, and update the value for the competitor
-  const calculateTotalSetPoints = function (set: any, set_points_map: Map<string, number[]>, arrows_values: Record<string, number>) {
-    for (const competitor in set) {
-      const set_points = set_points_map.get(competitor) || [];
-      const total_set_points = set[competitor].reduce((total: number, arrow: string) => {
-        if (arrow === 'M' || arrow === 'X') {
-          return total + arrows_values[arrow];
-        }
-        return total + parseInt(arrow);
-      }, 0);
-      set_points.push(total_set_points);
-      set_points_map.set(competitor, set_points);
-    }
-  }
-
-  // Define a function expression to add the competitor's used brands to their counting arrays if the competitor's data is not already recorded.
-  const recordCompetitorsData = function (index: number, match_competitors: competitor[]) {
-    const competitor = match_competitors[index];
-    if (!competitors.some(comp => comp.name === competitor.name)) {
-      competitors.push(competitor);
-      risers.push(competitor.riser_brand);
-      limbs.push(competitor.limb_brand);
-      arrows.push(competitor.arrows_brand);
-    }
-  }
-
-  // From each match get the winner of the match calculate the total points per set per
-  //  and save the risers, limbs and arrows used for the competitors.
-  for (let i = 0; i < matches.length; i++) {
-    const match_competitors = matches[i].competitors
-    const sets = matches[i].sets
-    const winner = matches[i].winner
-
-    // If the match doesn't have both competitors don't consider the match
-    if (match_competitors.length != 2) continue
-
-    recordCompetitorsData(0, match_competitors);
-    recordCompetitorsData(1, match_competitors);
-
-    winners.push(match_competitors.find(competitor => competitor.name == winner))
-
-    for (const set of sets) {
-      calculateTotalSetPoints(set, set_points_map, arrows_values);
-    }
-  }
-
-  // Calculate from the competitors who won a match, what is the highest number of wins, 
-  //  and keep the competitor (or competitors) who won the most
-  let winners_map = new Map<string, number>()
-  for (const winner of winners) {
-    const wins = winners_map.get(winner.name) || 0
-    winners_map.set(winner.name, wins + 1)
-  }
-
-  let max_wins = 0;
-  winners_map.forEach(wins => {
-    if (wins > max_wins) max_wins = wins
-  })
-
-  winners_map.forEach((wins, name) => {
-    if (wins != max_wins) winners_map.delete(name)
-  })
-
-  // Calculate the average points por set (down to 1 decimal) of the competitor with the highest wins, and assign the wins and average property.
-  for (const [winner, wins] of winners_map) {
-    const sets = set_points_map.get(winner).length
-    const set_average = Math.round(((set_points_map.get(winner).reduce((prev, curr) => prev + curr, 0)) / sets) * 10) / 10
-
-    const competitor = winners.filter(competitor => competitor.name == winner)[0]
-    competitor.average_set = set_average
-    competitor.wins = wins
-  }
-
-  // Create a function expression to count the occurrences of brands in an array.
-  const countOccurrences = function (items: string[]): Map<string, number> {
-    const itemMap = new Map<string, number>();
-    for (const item of items) {
-      const count = itemMap.get(item) || 0;
-      itemMap.set(item, count + 1);
-    }
-    return itemMap;
-  }
-
-  const risers_map = countOccurrences(risers);
-  const limbs_map = countOccurrences(limbs);
-  const arrows_map = countOccurrences(arrows);
-
-  // Define an arrow function to get the top 3 brands and their counts, from a map.
-  const getTop3 = (map: Map<string, number>) =>
-    Array.from(map, ([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-  // Create the report object with the competitors with a wins property defined and the top 3 brands for limbs, risers, and arrows.
-  const report: report = {
-    winners: winners.filter(competitor => competitor.wins != undefined),
-    top3_risers: getTop3(risers_map),
-    top3_limbs: getTop3(limbs_map),
-    top3_arrows: getTop3(arrows_map),
-  }
-
-  return report
-}
-
-const matches: match[] = [
+const products: Product[] = [
   {
-    competitors: [
-      {
-        name: 'Sebastian',
-        age: 21,
-        arrows_brand: 'Easton ACC',
-        category: 'Mayor',
-        limb_brand: 'WNS',
-        riser_brand: 'Hoyt'
-      },
-      {
-        name: 'Julian',
-        age: 21,
-        arrows_brand: 'Easton X10',
-        category: 'Mayor',
-        limb_brand: 'MK',
-        riser_brand: 'Sebastian Flute'
-      }
-    ],
-    sets: [
-      {
-        'Sebastian': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Sebastian': ['9', '9', '10'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Sebastian': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-    ],
-    winner: 'Sebastian'
+    name: 'ACB10',
+    category: 'Compound',
+    mininum_invesment: 5000,
+    mininum_years: 5,
+    annualInterest: 12,
+    compoundingFrequency: 4
   },
   {
-    competitors: [
-      {
-        name: 'Milton',
-        age: 21,
-        arrows_brand: 'Black Eagle',
-        category: 'Mayor',
-        limb_brand: 'Hoyt',
-        riser_brand: 'W&W'
-      },
-      {
-        name: 'Julian',
-        age: 21,
-        arrows_brand: 'Easton X10',
-        category: 'Mayor',
-        limb_brand: 'MK',
-        riser_brand: 'Sebastian Flute'
-      }
-    ],
-    sets: [
-      {
-        'Milton': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Milton': ['9', '9', '10'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Milton': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-    ],
-    winner: 'Milton'
+    name: 'ACB11',
+    category: 'Compound',
+    mininum_invesment: 7000,
+    mininum_years: 3,
+    annualInterest: 13,
+    compoundingFrequency: 3
   },
   {
-    competitors: [
-      {
-        name: 'Santiago',
-        age: 21,
-        arrows_brand: 'Black Eagle',
-        category: 'Mayor',
-        limb_brand: 'WNS',
-        riser_brand: 'Hoyt'
-      },
-      {
-        name: 'Julian',
-        age: 21,
-        arrows_brand: 'Easton X10',
-        category: 'Mayor',
-        limb_brand: 'MK',
-        riser_brand: 'Sebastian Flute'
-      }
-    ],
-    sets: [
-      {
-        'Santiago': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Santiago': ['9', '9', '10'],
-        'Julian': ['9', '9', '9']
-      },
-      {
-        'Santiago': ['9', '10', '9'],
-        'Julian': ['9', '9', '9']
-      },
-    ],
-    winner: 'Santiago'
+    name: 'ACB12',
+    category: 'Compound',
+    mininum_invesment: 15000,
+    mininum_years: 3,
+    annualInterest: 15,
+    compoundingFrequency: 2
   },
   {
-    competitors: [
-      {
-        name: 'Sebastian',
-        age: 21,
-        arrows_brand: 'Easton ACC',
-        category: 'Mayor',
-        limb_brand: 'WNS',
-        riser_brand: 'Hoyt'
-      },
-      {
-        name: 'Santiago',
-        age: 21,
-        arrows_brand: 'Black Eagle',
-        category: 'Mayor',
-        limb_brand: 'WNS',
-        riser_brand: 'Hoyt'
-      }
-    ],
-    sets: [
-      {
-        'Sebastian': ['9', '8', '9'],
-        'Santiago': ['9', '9', '10']
-      },
-      {
-        'Sebastian': ['9', '9', '9'],
-        'Santiago': ['9', 'X', '9']
-      },
-      {
-        'Sebastian': ['9', '10', '9'],
-        'Santiago': ['X', 'X', '9']
-      },
-    ],
-    winner: 'Santiago'
+    name: 'DEF10',
+    category: 'Simple',
+    mininum_invesment: 2000,
+    mininum_years: 5,
+    annualInterest: 13
+  },
+  {
+    name: 'DEF11',
+    category: 'Simple',
+    mininum_invesment: 3500,
+    mininum_years: 3,
+    annualInterest: 12.5
+  },
+  {
+    name: 'DEF12',
+    category: 'Simple',
+    mininum_invesment: 8000,
+    mininum_years: 3,
+    annualInterest: 13
   }
 ]
 
-const report = tournament_report(matches)
+const calculateCompoundInterest = function (initial_investment: number, annualInterestRate: number, compoundingFrequency: number, investmentYears: number): number {
+  const rate = annualInterestRate / 100; // Convert percentage to a decimal
+  const futureValue = initial_investment * Math.pow((1 + rate / compoundingFrequency), compoundingFrequency * investmentYears);
+  return futureValue;
+}
 
-console.log(report)
+const calculateSimpleInterest = function (initial_investment: number, annualInterestRate: number, investmentYears: number): number {
+  const rate = annualInterestRate / 100; // Convert percentage to a decimal
+  const futureValue = initial_investment * (1 + rate * investmentYears);
+  return futureValue;
+}
+
+export default function suggestProducts(client: Client) {
+  // Filter the products by minimum investment amount and minimum years to invest.
+  const possibleProducts = products.filter(product => {
+    if (client.initial_investment * 1.5 >= product.mininum_invesment &&
+      client.investmentYears >= product.mininum_years
+    ) return product
+  })
+
+  let suggestedProducts: TotalInvestment[] = []
+
+  // Based on the product category calculate the total investment and fill the suggestions list.
+  for (const product of possibleProducts) {
+    let totalInvestment = 0
+
+    if (product.category == 'Compound') {
+      totalInvestment = calculateCompoundInterest(client.initial_investment, product.annualInterest, product.compoundingFrequency, client.investmentYears)
+    } else {
+      totalInvestment = calculateSimpleInterest(client.initial_investment, product.annualInterest, client.investmentYears)
+    }
+
+    suggestedProducts.push({
+      product_name: product.name,
+      product_category: product.category,
+      mininum_invesment: product.mininum_invesment,
+      mininum_years: product.mininum_years,
+      initial_investment: client.initial_investment,
+      final_investment: totalInvestment,
+      total_years: client.investmentYears
+    })
+  }
+
+  // Grouped the suggestions by category and ordered them by most final investment
+  const compoundProducts = suggestedProducts.filter(product => product.product_category == 'Compound').sort((a, b) => b.final_investment - a.final_investment)
+  const simpleProducts = suggestedProducts.filter(product => product.product_category == 'Simple').sort((a, b) => b.final_investment - a.final_investment)
+
+  return [...compoundProducts, ...simpleProducts]
+}
+
+const clientsSuggestions = suggestProducts({ initial_investment: 4000, investmentYears: 7 })
+console.log(clientsSuggestions)

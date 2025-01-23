@@ -1,0 +1,70 @@
+Arrow funcions are lexical scope, they define the 
+  this word depending on where they are writing 
+  and not where they are being use
+
+  function() {
+    this.something    ---this would depend on who calls it
+  }
+
+  () => {
+    this.something    ---this would depend on where is writing
+  }
+                      --- in this case.... the window
+
+-------------------------------
+ 
+ Currying is turning an multiple parameter function into recibing 
+ 1 argument at a time
+
+ const multiply = (a,b) => a*b;
+ 
+ const curriedMultiply = (a) => (b) => a*b;
+ const curriedMultiplyBy5 = curriedMultiply(5);
+
+ curriedMultiplyBy5(4) ==> 20
+
+
+-------------------------------
+
+Partial Application is applying the rest of the parameters on the second call
+
+const multiply = (a,b,c) => a*b*c;
+ 
+ const partialMultiplyBy5 = multiply.bind(null, 5); we don't care about the this right now
+ 
+ partialMultiplyBy5(3,4) ==> 5*3*4 ==> 60
+
+
+-------------------------------
+
+
+spreading an object it's givin a name
+const animals = {
+  tiger: 23,
+  lion: 5,
+  monkey: 2
+}
+
+//the ... is spread the rest of the animals, and give them a name
+const { tiger, ...rest} = animals
+tiger: 23
+rest = {
+  lion: 5,
+  monkey: 2
+}
+
+//if I would have give them the same name.... 
+const { tiger, ...animals} = animals
+tiger: 23
+animals = {
+  lion: 5,
+  monkey: 2
+}
+
+THIS IS WHY (...args) inside I have to use them as args
+First spread the args through ..., then give them the name of args
+
+
+-------------------------------------------
+
+Tight coupling is when something affects a lot of things 

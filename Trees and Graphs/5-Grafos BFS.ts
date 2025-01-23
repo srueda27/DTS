@@ -398,3 +398,40 @@ function openLock(deadends: string[], target: string): number {
 
   return -1;
 };
+
+
+
+/* 
+Ejemplo en Python de BFS
+from collections import deque
+
+def friend(network, person):
+    degrees = {person: 0}  # Initialize the degrees dictionary with the starting person
+    queue = deque([person])  # Initialize the queue with the starting person
+
+    while queue:
+        current = queue.popleft()
+        current_degree = degrees[current]
+
+        for friend in network.get(current, []):
+            if friend not in degrees:
+                degrees[friend] = current_degree + 1
+                queue.append(friend)
+    
+    adjusted_degrees = {friend: degree -1 for friend, degree in degrees.items() if friend != person}
+    
+    return adjusted_degrees
+
+# Example usage
+network = {
+    "Alice": ["Bob", "Eli"],
+    "Bob": ["Alice", "Ana"],
+    "Eli": ["Alice", "Ana"],
+    "Ana": ["Bob", "Eli", "Pep"],
+    "Pep": ["Ana"]
+}
+
+result = friend(network, 'Alice')
+print(result)
+
+*/

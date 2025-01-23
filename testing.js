@@ -1,60 +1,74 @@
-function formatNumberToUSD(number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(number);
-}
+const fs = require('fs');
+const moment = require('moment');
 
-async function getProducts(id) {
-  try {
-    // Fetch the product's data from the API
-    const response = await fetch(`https://fakestoreapi.com/products/${id ?? ''}`);
-    let productResponse
+function saveGradesToCSV(students, courseName) {
+    let csvContent = 'Student,';
+    let maxQuizzesPerQuarter = [0, 0, 0, 0];
 
-    try {
-      productResponse = await response.json();
-    } catch (jsonParseError) {
-      // Handle JSON parsing error (e.g., empty response body, no id found)
-      throw new Error("Product not found")
-    }
-
-    // Add a condition to check if the function is getting an ID; if yes, return only the object related to that product
-    if (id) {
-      return {
-        id: productResponse.id,
-        price: formatNumberToUSD(productResponse.price),
-        category: productResponse.category,
-        rate: productResponse.rating.rate
-      }
-    } else {
-      // Iterate through the product list to generate a new list using the map function.
-      return productResponse.map((item) => {
-        return {
-          id: item.id,
-          price: formatNumberToUSD(item.price),
-          category: item.category,
-          rate: item.rating.rate
+    // Find the maximum number of quizzes in each quarter
+    for (let student of students) {
+        for (let quarter = 0; quarter < 4; quarter++) {
+            maxQuizzesPerQuarter[quarter] = Math.max(maxQuizzesPerQuarter[quarter], student.grades[quarter].length);
         }
-      }).filter((item) => parseFloat((item.price).replace("$", "")) < 50.0 && item.rate > 4); // Filter list by price lower than 50 and rate greater than 4
     }
-  } catch (err) {
-    if (err.message && err.message == 'Product not found') {
-      console.log(err.message)
-    } else {
-      console.log(err)
+
+    // Create the header row
+    for (let quarter = 0; quarter < 4; quarter++) {
+        for (let quiz = 0; quiz < maxQuizzesPerQuarter[quarter]; quiz++) {
+            csvContent += `Q${quarter + 1}_Quiz${quiz + 1},`;
+        }
+        csvContent += `Q${quarter + 1}_grade,`;
     }
-  }
+    csvContent += 'Final_grade\n';
+
+    // Create the rows for each student
+    for (let student of students) {
+        csvContent += `${student.name},`;
+        let finalGrade = 0;
+        for (let quarter = 0; quarter < 4; quarter++) {
+            let quarterGrade = 0;
+            for (let quiz = 0; quiz < maxQuizzesPerQuarter[quarter]; quiz++) {
+                if (quiz < student.grades[quarter].length) {
+                    csvContent += `${student.grades[quarter][quiz]},`;
+                    quarterGrade += student.grades[quarter][quiz];
+                } else {
+                    csvContent += ',';
+                }
+            }
+            quarterGrade /= student.grades[quarter].length;
+            csvContent += `${quarterGrade.toFixed(2)},`;
+            finalGrade += quarterGrade;
+        }
+        finalGrade /= 4;
+        csvContent += `${finalGrade.toFixed(2)}\n`;
+    }
+
+    // Save the CSV content to a file
+    const date = moment().format('YY-MM-DD');
+    const filename = `${date}-${courseName}.csv`;
+    fs.writeFile(filename, csvContent, (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(`Grades saved to ${filename}`);
+        }
+    });
 }
 
-// Example usage:
-async function productUpdateList(id) {
-  const products = await getProducts(id);
-  // This console will execute only after the promise from `getProducts` is resolved
-  console.log(products ?? "")
-}
+// Example data
+const students = [
+    {
+        name: 'John Doe',
+        grades: [[4, 5, 4], [3, 4, 5], [5, 5, 4], [4, 5, 5]]
+    },
+    {
+        name: 'Jane Doe',
+        grades: [[5, 5, 5], [4, 4, 4], [3, 3, 3], [2, 2, 2]]
+    },
+    {
+        name: 'Jim Doe',
+        grades: [[4, 4, 4], [3, 3, 3], [5, 5, 5], [4, 4, 4]]
+    }
+];
 
-productUpdateList();
-productUpdateList(1);
-productUpdateList(333); // This id doesn't exist
+saveGradesToCSV(students, 'Course');

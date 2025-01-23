@@ -1,0 +1,11 @@
+Variables are partially hoisted     ----> only work with var 
+Functions declaration are hoisted   ----> only work with function 
+
+console.log('something')
+console.log(teddy) --> here teddy is undefined because variables are partially hoisted
+sing() --> it wouldn't be an issue because functions are hoisted
+
+var teddy = 'oli'
+function sing() {
+  console.log('sign')
+}

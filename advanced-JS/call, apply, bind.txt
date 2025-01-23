@@ -1,0 +1,43 @@
+call(obj, par1, par2) 		--recives parameters 
+apply(obj, [par1, par2]) 	--recives array of parameters
+
+fn.call() == fn() // fn.apply()
+
+call(WhatYouWantToUseOnto)
+
+obj.fn.call(anotherObj) --This would let us use fn on anotherObj that doesnt have fn 
+				like it do
+
+--------------------
+
+apply--
+
+	--because parameters are an array
+		const array = [1,2,3];
+
+		// in this case, the 'this' keyword doesn't matter!
+		function getMaxNumber(arr){
+		  return Math.max.apply(null, arr);  
+		}
+
+		getMaxNumber(array)
+
+-----------------------------
+
+bind --creates a link from one obj to another, to LATER use
+
+const variable = obj.fn.bind(otherObj, ...args)
+
+const obj = {
+    name: 'Billy',
+    sing(){
+        console.log('a', this);
+        var anotherFn = function() {
+            console.log('b', this)
+        }
+        return anotherFn.bind(this)
+    }
+}
+
+stateless statefull
+ACID Transaction

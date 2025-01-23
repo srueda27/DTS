@@ -1,0 +1,84 @@
+HOF -> Higher Order Functions -> Functions that can take/return other functions
+const HOF = a => b => a,b
+const f = HOF(r) -- would leave f as a function that receives 1 argument
+
+-------------------------------
+
+var a = 10; --Global Scope
+function modifyA(a) {
+	a = 100 --variable env
+}
+modifyA(a)
+a => 10 --because of the own variable env, it took the argument as var instead of the global
+
+-------------------------------
+
+You can create a closure exposing the inner function 
+	to the variables of the outer function
+
+You have to expose the inner function by returning it
+
+
+
+-------------------------------
+
+Closure	--The ability to "remember" variables inside functions that are being reference
+	--Are Memory efficient
+	--Allows encapsulation
+
+function callMeMaybe() {
+    setTimeout(function() {
+        console.log(callMe);
+    }, 4000);
+    const callMe = 'Hi! I am now here!';
+} ---Because of closure even after the callMeMaybe (and content) is pulled out of the stack
+		the function inside, still remembers the referenced variable
+
+	--Memory efficient
+		-- Allows to created just 1 time the bigArray and "store it" inside the closure
+		function heavyDuty2() {
+		    const bigArray = new Array(7000).fill('Oli');
+		    console.log('created AGAIN');
+		    return (idx) => bigArray[idx];
+		}
+
+		function heavyDuty(idx) {
+		    const bigArray = new Array(7000).fill('Oli');
+		    console.log('created');
+		    return bigArray[idx];
+		}
+
+		heavyDuty(683)
+		heavyDuty(638)
+		heavyDuty(58)
+		const getHeavyDuty = heavyDuty2();
+		getHeavyDuty(876)
+		getHeavyDuty(645)
+		getHeavyDuty(978)
+
+	--Encapsulation
+		--It allows to show only the methods that we like to expose
+		const makeNuclearButton = () => {
+			let timeWithoutDestruction = 0;
+			const passTime = () => timeWithoutDestruction++;
+			const totalPeaceTime = () => timeWithoutDestruction;
+			const launch = () => {
+			    timeWithoutDestruction = -1;
+			    return '💥';
+			}
+
+			setInterval(passTime, 1000);
+			return {totalPeaceTime}
+		}
+
+		const ww3 = makeNuclearButton();
+		ww3.totalPeaceTime()
+
+	--Example, it can be done also with let, to use it as a block scope
+		for(var i = 0; i < array.length; i++){
+		    (function timer(idx){
+         		setTimeout(function(){
+		        console.log('I am at index: '+idx)
+		        },3000);   
+		    })(i)
+		}

@@ -1,0 +1,18 @@
+SQL - Structured Query Language
+
+Relational 
+  - Scaling vertically, more hardware capacity needs to be added // improve the server
+  - common query Language 
+  - Tables have schemas
+  - Tables are related
+  - Slow to query related data
+
+
+NoSQL
+  - Scaling horizontally, just more equipment needs to be added // more servers
+  - every NoSQL db has it's own query Language
+  - Documents have no schemas
+  - Documents are not related
+  - Fast to query document's data
+
+standalone data
